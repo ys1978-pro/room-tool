@@ -6,7 +6,6 @@ exports.handler = async function(event, context) {
   const url = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601'
     + '?format=json'
     + '&keyword=' + encodeURIComponent(keyword)
-    + '&genreId=555086'
     + '&applicationId=' + APP_ID
     + '&accessKey=' + ACCESS_KEY
     + '&hits=8'
