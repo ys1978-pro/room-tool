@@ -4,14 +4,12 @@ exports.handler = async function(event, context) {
     keyword = event.queryStringParameters.keyword;
   }
 
-  var APP_ID = '335c3f9c-6e96-4226-9471-4766fec2d117';
-  var AFFILIATE_ID = '2feb98da.6826c70c.2feb98db.8d4d3431';
+  var APP_ID = '841bfccf-3ead-421f-9795-4f495f933860';
 
   var url = 'https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706'
     + '?format=json'
     + '&keyword=' + encodeURIComponent(keyword)
     + '&applicationId=' + APP_ID
-    + '&affiliateId=' + AFFILIATE_ID
     + '&hits=8'
     + '&sort=-reviewCount';
 
