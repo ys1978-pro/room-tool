@@ -1,15 +1,16 @@
 exports.handler = async (event) => {
   const keyword = event.queryStringParameters?.keyword || '美容液';
   const APP_ID = '335c3f9c-6e96-4226-9471-4766fec2d117';
+  const ACCESS_KEY = 'pk_thp8WuFagFNOQh9VnsoWHJ8mAQhhRsHt4NWvW4wUA4q';
 
-  const url = https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706
+  const url = https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601
     + ?format=json
     + &keyword=${encodeURIComponent(keyword)}
     + &genreId=555086
     + &applicationId=${APP_ID}
+    + &accessKey=${ACCESS_KEY}
     + &hits=8
-    + &sort=-reviewCount
-    + `&minReviewCount=5`;
+    + `&sort=-reviewCount`;
 
   try {
     const res = await fetch(url);
