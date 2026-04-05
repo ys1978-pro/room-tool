@@ -15,7 +15,12 @@ exports.handler = async function(event, context) {
     + '&hits=8';
 
   try {
-    var res = await fetch(url);
+    var res = await fetch(url, {
+      headers: {
+        'Referer': 'https://room-tool-live.netlify.app',
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
     var text = await res.text();
     return {
       statusCode: 200,
