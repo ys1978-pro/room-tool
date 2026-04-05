@@ -1,4 +1,3 @@
-const fetch = require('node-fetch');
 exports.handler = async function(event, context) {
   const keyword = (event.queryStringParameters && event.queryStringParameters.keyword) || '美容液';
   const APP_ID = '335c3f9c-6e96-4226-9471-4766fec2d117';
