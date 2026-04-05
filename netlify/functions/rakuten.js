@@ -4,17 +4,24 @@ exports.handler = async function(event, context) {
     keyword = event.queryStringParameters.keyword;
   }
 
-  var APP_ID = '841bfccf-3ead-421f-9795-4f495f933860';
+  var APP_ID = '335c3f9c-6e96-4226-9471-4766fec2d117';
+  var ACCESS_KEY = 'pk_thp8WuFagFNOQh9VnsoWHJ8mAQhhRsHt4NWvW4wUA4q';
 
-  var url = 'https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706'
+  var url = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601'
     + '?format=json'
     + '&keyword=' + encodeURIComponent(keyword)
     + '&applicationId=' + APP_ID
-    + '&hits=8'
-    + '&sort=-reviewCount';
+    + '&accessKey=' + ACCESS_KEY
+    + '&hits=8';
 
   try {
-    var res = await fetch(url);
+    var res = await fetch(url, {
+      headers: {
+        'Origin': 'https://room-tool-live.netlify.app',
+        'Referer': 'https://room-tool-live.netlify.app/',
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15'
+      }
+    });
     var text = await res.text();
     return {
       statusCode: 200,
