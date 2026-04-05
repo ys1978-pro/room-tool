@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Room コスメ投稿ツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink: #E8607A;
+  --pink-light: #FDEEF1;
+  --pink-mid: #F5C0CA;
+  --bg: #FFF8F9;
+  --white: #FFFFFF;
+  --text: #2D1A20;
+  --muted: #A08890;
+  --border: #F0D8DC;
+  --green: #4CAF82;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Zen Maru Gothic', sans-serif;
+  min-height: 100vh;
+  padding-bottom: 48px;
+}
+.header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 10px;
+  position: sticky; top:0; z-index:50;
+}
+.header-icon {
+  width:36px;height:36px;background:var(--pink);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.header-title { font-size:15px;font-weight:700; }
+.header-sub { font-size:11px;color:var(--muted);margin-top:1px; }
+.live-badge {
+  margin-left:auto;
+  background:#E8F5EE;border:1px solid #4CAF82;
+  border-radius:20px;padding:4px 10px;
+  font-size:10px;font-weight:700;color:#4CAF82;
+  display:flex;align-items:center;gap:5px;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#4CAF82;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.search-box {
+  background:var(--white);margin:14px 16px;border-radius:16px;
+  padding:18px;box-shadow:0 2px 16px rgba(232,96,122,0.08);
+  border:1px solid var(--border);
+}
+.search-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;letter-spacing:0.05em;}
+.search-row{display:flex;gap:10px;align-items:center;}
+.search-input {
+  flex:1;border:1.5px solid var(--border);border-radius:12px;
+  padding:13px 16px;font-family:'Zen Maru Gothic',sans-serif;
+  font-size:15px;color:var(--text);background:var(--bg);outline:none;
+  transition:border-color 0.2s;
+}
+.search-input:focus{border-color:var(--pink);background:var(--white);}
+.search-input::placeholder{color:var(--muted);}
+.go-btn {
+  width:52px;height:52px;flex-shrink:0;background:var(--pink);
+  border:none;border-radius:14px;color:white;font-size:22px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+.go-btn:active{transform:scale(0.94);}
+.go-btn:disabled{opacity:0.5;}
+.go-btn .sp{
+  display:none;width:20px;height:20px;
+  border:2.5px solid rgba(255,255,255,0.35);
+  border-top-color:white;border-radius:50%;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.go-btn.loading .sp{display:block;}
+.go-btn.loading .ic{display:none;}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.chip{
+  padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);
+  background:var(--bg);font-size:12px;color:var(--muted);cursor:pointer;
+  font-family:'Zen Maru Gothic',sans-serif;transition:all 0.15s;white-space:nowrap;
+}
+.chip:active,.chip.sel{background:var(--pink);border-color:var(--pink);color:white;}
+
+.status-bar{
+  margin:0 16px 12px;padding:10px 16px;
+  background:var(--pink-light);border-radius:10px;
+  font-size:12px;color:var(--pink);font-weight:700;
+  display:none;align-items:center;gap:8px;
+}
+.status-bar.show{display:flex;}
+.s-dot{width:8px;height:8px;border-radius:50%;background:var(--pink);animation:blink 1s infinite;flex-shrink:0;}
+
+.err-bar{
+  margin:0 16px 12px;padding:12px 16px;
+  background:#FFF0F0;border:1px solid #FFCDD2;border-radius:10px;
+  font-size:12px;color:#C62828;display:none;
+  align-items:flex-start;gap:8px;line-height:1.7;
+}
+.err-bar.show{display:flex;}
+
+.cards{padding:0 16px;display:flex;flex-direction:column;gap:14px;}
+.card{
+  background:var(--white);border-radius:16px;border:1px solid var(--border);
+  overflow:hidden;opacity:0;transform:translateY(14px);
+  animation:up 0.4s forwards;box-shadow:0 2px 12px rgba(232,96,122,0.06);
+}
+@keyframes up{to{opacity:1;transform:translateY(0);}}
+
+.card-top{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+}
+.card-img{
+  width:64px;height:64px;flex-shrink:0;border-radius:10px;
+  overflow:hidden;background:var(--pink-light);
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+}
+.card-img img{width:100%;height:100%;object-fit:cover;}
+.card-meta{flex:1;min-width:0;}
+.card-name{
+  font-size:13px;font-weight:700;color:var(--text);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.card-shop{font-size:11px;color:var(--muted);margin-top:3px;}
+.card-price{font-size:15px;font-weight:700;color:var(--pink);margin-top:3px;}
+.card-review{font-size:11px;color:var(--muted);margin-top:2px;}
+.card-score{
+  flex-shrink:0;width:42px;height:42px;border-radius:50%;
+  border:2.5px solid var(--pink-mid);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.score-num{font-size:13px;font-weight:700;color:var(--pink);line-height:1;}
+.score-lbl{font-size:8px;color:var(--muted);margin-top:1px;}
+
+.card-copy{
+  padding:14px 16px;font-size:13px;line-height:1.85;
+  color:var(--text);white-space:pre-line;
+}
+.copy-loading{
+  padding:14px 16px;font-size:12px;color:var(--muted);
+  display:flex;align-items:center;gap:8px;
+}
+.mini-spin{
+  width:14px;height:14px;border:2px solid var(--border);
+  border-top-color:var(--pink);border-radius:50%;
+  animation:spin 0.7s linear infinite;flex-shrink:0;
+}
+
+.card-actions{padding:0 16px 14px;display:flex;gap:10px;}
+.btn-copy{
+  flex:1;padding:11px;background:var(--pink-light);border:none;
+  border-radius:12px;font-family:'Zen Maru Gothic',sans-serif;
+  font-size:13px;font-weight:700;color:var(--pink);cursor:pointer;
+  transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-copy:active{transform:scale(0.97);}
+.btn-copy.copied{background:var(--green);color:white;}
+.btn-regen{
+  width:44px;padding:11px;background:var(--bg);
+  border:1.5px solid var(--border);border-radius:12px;
+  font-size:15px;cursor:pointer;transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-regen:active{transform:scale(0.94);border-color:var(--pink);}
+
+.hint{text-align:center;padding:56px 30px;color:var(--muted);}
+.hint-icon{font-size:48px;margin-bottom:14px;opacity:0.5;}
+.hint-text{font-size:14px;line-height:1.8;}
+.hint-text strong{color:var(--pink);}
+
+.claude-box{
+  margin:0 16px 14px;background:var(--white);
+  border-radius:14px;border:1px solid var(--border);overflow:hidden;
+}
+.claude-header{
+  padding:14px 16px;display:flex;align-items:center;gap:10px;
+  cursor:pointer;user-select:none;
+}
+.claude-arrow{font-size:11px;color:var(--muted);margin-left:auto;transition:transform 0.2s;}
+.claude-arrow.open{transform:rotate(90deg);}
+.claude-body{display:none;padding:0 16px 16px;}
+.claude-body.open{display:block;}
+.c-field label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;}
+.c-field input{
+  width:100%;border:1.5px solid var(--border);border-radius:10px;
+  padding:10px 14px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;
+  color:var(--text);background:var(--bg);outline:none;transition:border-color 0.2s;
+}
+.c-field input:focus{border-color:var(--pink);}
+.c-note{
+  font-size:11px;color:var(--muted);line-height:1.7;
+  padding:10px 12px;background:var(--pink-light);border-radius:8px;margin-top:8px;
+}
+.c-note a{color:var(--pink);}
+.c-save{
+  width:100%;margin-top:12px;padding:11px;
+  background:var(--pink);border:none;border-radius:10px;
+  font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;
+  color:white;cursor:pointer;
+}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(8px);
+  background:var(--text);color:white;padding:11px 22px;
+  border-radius:24px;font-size:13px;font-weight:700;
+  z-index:999;opacity:0;transition:all 0.25s;
+  pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">💄</div>
+  <div>
+    <div class="header-title">Room 投稿ツール</div>
+    <div class="header-sub">楽天 × AI 紹介文ジェネレーター</div>
+  </div>
+  <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+</div>
+
+<div class="claude-box">
+  <div class="claude-header" onclick="toggleClaude()">
+    <span style="font-size:16px">🤖</span>
+    <div>
+      <div style="font-size:13px;font-weight:700;">AI紹介文をさらに強化（任意）</div>
+      <div style="font-size:11px;color:var(--muted);" id="claudeStatus">未設定（自動テンプレートで動作中）</div>
+    </div>
+    <div class="claude-arrow" id="claudeArrow">▶</div>
+  </div>
+  <div class="claude-body" id="claudeBody">
+    <div class="c-field">
+      <label>Anthropic APIキー（Claude AI）</label>
+      <input type="password" id="claudeKey" placeholder="sk-ant-...">
+      <div class="c-note">
+        入力するとClaudeが商品ごとにリアルタイムで紹介文を作成します✨<br>
+        <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> で無料取得できます。
+      </div>
+    </div>
+    <button class="c-save" onclick="saveClaude()">✓ 保存する</button>
+  </div>
+</div>
+
+<div class="search-box">
+  <div class="search-label">🔍 キーワードを入力してボタンを押す</div>
+  <div class="search-row">
+    <input class="search-input" id="kw" type="text" placeholder="例：美容液、日焼け止め…">
+    <button class="go-btn" id="goBtn" onclick="generate()">
+      <span class="ic">✦</span>
+      <span class="sp"></span>
+    </button>
+  </div>
+  <div class="chips">
+    <div class="chip" onclick="setKw(this,'美容液')">美容液</div>
+    <div class="chip" onclick="setKw(this,'日焼け止め')">日焼け止め</div>
+    <div class="chip" onclick="setKw(this,'ファンデーション')">ファンデ</div>
+    <div class="chip" onclick="setKw(this,'口紅')">口紅</div>
+    <div class="chip" onclick="setKw(this,'ヘアケア')">ヘアケア</div>
+    <div class="chip" onclick="setKw(this,'ボディクリーム')">ボディクリーム</div>
+  </div>
+</div>
+
+<div class="status-bar" id="statusBar">
+  <div class="s-dot"></div>
+  <span id="statusText">検索中…</span>
+</div>
+<div class="err-bar" id="errBar">
+  <span>⚠️</span>
+  <span id="errText"></span>
+</div>
+
+<div class="cards" id="cards">
+  <div class="hint">
+    <div class="hint-icon">🌸</div>
+    <div class="hint-text">
+      キーワードを入力して<br>
+      <strong>✦ ボタン</strong>を押すだけ！<br>
+      実際の楽天商品＋紹介文が<br>自動で出てきます
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ コピーしました！</div>
+
+<script>
+// ── APIキー（旧エンドポイント用）────────────────
+// 旧エンドポイントはCORSが通るのでそのまま使えます！
+const APP_ID = '335c3f9c-6e96-4226-9471-4766fec2d117';
+
+let claudeKey = '';
+try { claudeKey = localStorage.getItem('claudeKey') || ''; } catch(e){}
+if (claudeKey) {
+  document.getElementById('claudeStatus').textContent = 'Claude AI 接続済み ✓';
+  document.getElementById('claudeStatus').style.color = 'var(--green)';
+  document.getElementById('claudeKey').value = claudeKey;
+}
+
+function toggleClaude() {
+  document.getElementById('claudeBody').classList.toggle('open');
+  document.getElementById('claudeArrow').classList.toggle('open');
+}
+function saveClaude() {
+  claudeKey = document.getElementById('claudeKey').value.trim();
+  try { localStorage.setItem('claudeKey', claudeKey); } catch(e){}
+  document.getElementById('claudeStatus').textContent = claudeKey ? 'Claude AI 接続済み ✓' : '未設定（テンプレートで動作中）';
+  document.getElementById('claudeStatus').style.color = claudeKey ? 'var(--green)' : 'var(--muted)';
+  document.getElementById('claudeBody').classList.remove('open');
+  document.getElementById('claudeArrow').classList.remove('open');
+  showToast('✓ 保存しました！');
+}
+
+// ── 楽天API（Netlify Functions経由・CORS解決済み）────────
+async function fetchRakuten(keyword) {
+  const url = `/.netlify/functions/rakuten?keyword=${encodeURIComponent(keyword)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error_description || `エラー: ${res.status}`);
+  }
+  const data = await res.json();
+  if (data.error) throw new Error(data.error_description || data.error);
+  return data.Items || [];
+}
+
+function parseItem(raw) {
+  const it = raw.Item || raw;
+  return {
+    name: it.itemName || '',
+    shop: it.shopName || '',
+    price: it.itemPrice || 0,
+    url: it.itemUrl || '',
+    image: it.mediumImageUrls?.[0]?.imageUrl || it.mediumImageUrls?.[0] || null,
+    reviewAverage: parseFloat(it.reviewAverage) || 0,
+    reviewCount: parseInt(it.reviewCount) || 0,
+    catchcopy: it.catchcopy || '',
+    caption: (it.itemCaption || '').replace(/<[^>]*>/g, '').slice(0, 150),
+  };
+}
+
+function scoreItem(p) {
+  return Math.min(99, Math.round(
+    p.reviewAverage * 11
+    + Math.min(28, Math.log10(p.reviewCount + 1) * 10)
+    + Math.random() * 4
+  ));
+}
+
+// ── Claude AI紹介文 ───────────────────────────────
+async function genCopyAI(p, kw) {
+  if (!claudeKey) return null;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `楽天Roomのコスメインフルエンサーとして以下の商品の紹介文を書いてください。
+
+商品名：${p.name}
+価格：¥${p.price.toLocaleString()}
+キャッチコピー：${p.catchcopy}
+商品説明：${p.caption}
+
+条件：
+・3〜5行、改行区切り
+・友達に話しかける口調
+・絵文字2〜3個
+・具体的な使用感や魅力
+・ハッシュタグなし
+・前置きなしでいきなり文章から始める`
+        }]
+      })
+    });
+    const d = await res.json();
+    return d.content?.[0]?.text?.trim() || null;
+  } catch(e) { return null; }
+}
+
+// ── テンプレート紹介文 ────────────────────────────
+function genCopyTemplate(p, kw) {
+  const t = [
+    `${kw}を探してたらこれに出会った✨\nレビュー数がすごく多くて気になってたけど、使ってみて納得の品質！\n毎日のルーティンに取り入れたくなる一品です🌸\nコスメ好きの人にぜひおすすめしたい。`,
+    `${kw}はこれが正解かもしれない💄\nお値段以上の使い心地で毎日使いたくなる！\nレビューの良さが全部うなずける仕上がりです。\n楽天で見つけた最近の推しコスメ✨`,
+    `話題の${kw}を試してみた🌟\nキャッチコピーに惹かれて即ポチしたんだけど大正解！\nリピート確定になりました。\nぜひ一度試してみてほしいです♡`,
+  ];
+  return t[Math.floor(Math.random() * t.length)];
+}
+
+// ── メイン ────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let currentItems = [];
+let currentKw = '';
+
+function setStatus(msg) {
+  document.getElementById('statusBar').classList.add('show');
+  document.getElementById('statusText').textContent = msg;
+}
+function hideStatus() { document.getElementById('statusBar').classList.remove('show'); }
+function showErr(msg) {
+  document.getElementById('errBar').classList.add('show');
+  document.getElementById('errText').textContent = msg;
+}
+function hideErr() { document.getElementById('errBar').classList.remove('show'); }
+
+async function generate() {
+  const kw = document.getElementById('kw').value.trim();
+  if (!kw) return;
+  currentKw = kw;
+
+  const btn = document.getElementById('goBtn');
+  btn.disabled = true; btn.classList.add('loading');
+  hideErr();
+  document.getElementById('cards').innerHTML = '';
+  setStatus('楽天から商品を検索中…');
+
+  let items = [];
+  try {
+    const raw = await fetchRakuten(kw);
+    items = raw.slice(0, 5).map(parseItem);
+    currentItems = items;
+    if (items.length === 0) throw new Error('商品が見つかりませんでした。キーワードを変えてみてください。');
+  } catch(e) {
+    hideStatus();
+    showErr(e.message);
+    btn.disabled = false; btn.classList.remove('loading');
+    return;
+  }
+
+  setStatus(`${items.length}件取得！紹介文を生成中…`);
+
+  const cardsEl = document.getElementById('cards');
+  items.forEach((p, i) => {
+    cardsEl.appendChild(buildCard(p, scoreItem(p), i));
+  });
+
+  hideStatus();
+  btn.disabled = false; btn.classList.remove('loading');
+
+  for (let i = 0; i < items.length; i++) {
+    const copy = await genCopyAI(items[i], kw) || genCopyTemplate(items[i], kw);
+    fillCopy(i, items[i], copy);
+  }
+}
+
+function buildCard(p, sc, idx) {
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.id = `card-${idx}`;
+  div.style.animationDelay = `${idx * 0.08}s`;
+
+  const imgHtml = p.image
+    ? `<img src="${p.image}" alt="" onerror="this.style.display='none'">`
+    : `💄`;
+
+  div.innerHTML = `
+    <div class="card-top">
+      <div class="card-img">${imgHtml}</div>
+      <div class="card-meta">
+        <div class="card-name">${p.name}</div>
+        <div class="card-shop">🏪 ${p.shop}</div>
+        <div class="card-price">¥${p.price.toLocaleString()}</div>
+        <div class="card-review">⭐ ${p.reviewAverage || '—'}（${p.reviewCount.toLocaleString()}件）</div>
+      </div>
+      <div class="card-score">
+        <div class="score-num">${sc}</div>
+        <div class="score-lbl">SCORE</div>
+      </div>
+    </div>
+    <div id="copy-${idx}" class="copy-loading">
+      <div class="mini-spin"></div>紹介文を生成中…
+    </div>
+    <div class="card-actions" id="actions-${idx}"></div>
+  `;
+  return div;
+}
+
+function fillCopy(idx, p, copy) {
+  const copyEl = document.getElementById(`copy-${idx}`);
+  const actEl = document.getElementById(`actions-${idx}`);
+  if (!copyEl) return;
+  copyEl.className = 'card-copy';
+  copyEl.textContent = copy;
+
+  const roomText = `🌸 ${p.name}\n💰 ¥${p.price.toLocaleString()}\n⭐ ${p.reviewAverage}（${p.reviewCount.toLocaleString()}件）\n🏪 ${p.shop}\n\n${copy}\n\n${p.url}`;
+  const esc = roomText.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\n/g,'\\n');
+  actEl.innerHTML = `
+    <button class="btn-copy" id="copybtn-${idx}" onclick="copyCard(${idx},\`${esc}\`)">
+      📋 コピーして投稿
+    </button>
+    <button class="btn-regen" onclick="regenCopy(${idx})" title="文章を変える">🔄</button>
+  `;
+}
+
+async function regenCopy(idx) {
+  const p = currentItems[idx];
+  if (!p) return;
+  const copyEl = document.getElementById(`copy-${idx}`);
+  const actEl = document.getElementById(`actions-${idx}`);
+  copyEl.className = 'copy-loading';
+  copyEl.innerHTML = '<div class="mini-spin"></div>再生成中…';
+  actEl.innerHTML = '';
+  const copy = await genCopyAI(p, currentKw) || genCopyTemplate(p, currentKw);
+  fillCopy(idx, p, copy);
+}
+
+function copyCard(idx, text) {
+  navigator.clipboard.writeText(text.replace(/\\n/g,'\n')).catch(()=>{});
+  const btn = document.getElementById(`copybtn-${idx}`);
+  if (btn) {
+    btn.classList.add('copied');
+    btn.textContent = '✓ コピー済み！';
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '📋 コピーして投稿'; }, 2500);
+  }
+  showToast('✓ コピーしました！');
+}
+
+function setKw(el, kw) {
+  document.getElementById('kw').value = kw;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  generate();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.getElementById('kw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') generate();
+});
+</script>
+</body>
+</html>
